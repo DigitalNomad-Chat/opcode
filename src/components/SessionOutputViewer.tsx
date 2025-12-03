@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useDebouncedCallback } from '@/hooks/useDebounce';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Maximize2, Minimize2, Copy, RefreshCw, RotateCcw, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -299,7 +300,7 @@ export function SessionOutputViewer({ session, onClose, className }: SessionOutp
   };
 
 
-  const refreshOutput = async () => {
+  const refreshOutput = useDebouncedCallback(async () => {
     setRefreshing(true);
     try {
       await loadOutput(true); // Skip cache when manually refreshing
@@ -310,7 +311,7 @@ export function SessionOutputViewer({ session, onClose, className }: SessionOutp
     } finally {
       setRefreshing(false);
     }
-  };
+  }, 300);
 
 
   // Load output on mount and check cache first

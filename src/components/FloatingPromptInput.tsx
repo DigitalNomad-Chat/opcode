@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Send,
@@ -23,6 +24,7 @@ import { FilePicker } from "./FilePicker";
 import { SlashCommandPicker } from "./SlashCommandPicker";
 import { ImagePreview } from "./ImagePreview";
 import { type FileEntry, type SlashCommand } from "@/lib/api";
+import { generatePlaceholder } from '../hooks/useImageManager';
 
 // Conditional import for Tauri webview window
 let tauriGetCurrentWebviewWindow: any;
@@ -212,6 +214,7 @@ const MODELS: Model[] = [
  * />
  */
 const FloatingPromptInputInner = (
+  { useTranslation } = useTranslation(),
   {
     onSend,
     isLoading = false,
@@ -255,8 +258,10 @@ const FloatingPromptInputInner = (
             return currentPrompt; // Image already added
           }
 
-          // Wrap path in quotes if it contains spaces
-          const mention = imagePath.includes(' ') ? `@"${imagePath}"` : `@${imagePath}`;
+          // 使用ClaudeCode占位符，避免base64卡顿
+          const isBase64 = imagePath.startsWith('data:');
+          const placeholder = generatePlaceholder(imagePath, isBase64);
+          const mention = placeholder;
           const newPrompt = currentPrompt + (currentPrompt.endsWith(' ') || currentPrompt === '' ? '' : ' ') + mention + ' ';
 
           // Focus the textarea
@@ -286,6 +291,7 @@ const FloatingPromptInputInner = (
 
   // Extract image paths from prompt text
   const extractImagePaths = (text: string): string[] => {
+  return useImageManager().extractImagePaths(text); // 使用新钩子，兼容旧
     console.log('[extractImagePaths] Input text length:', text.length);
     
     // Updated regex to handle both quoted and unquoted paths
@@ -401,11 +407,9 @@ const FloatingPromptInputInner = (
 
                 // Wrap paths with spaces in quotes for clarity
                 const mentionsToAdd = newPaths.map(p => {
-                  // If path contains spaces, wrap in quotes
-                  if (p.includes(' ')) {
-                    return `@"${p}"`;
-                  }
-                  return `@${p}`;
+                  const isBase64 = p.startsWith('data:');
+                  const placeholder = generatePlaceholder(p, isBase64);
+                  return placeholder;
                 }).join(' ');
                 const newPrompt = currentPrompt + (currentPrompt.endsWith(' ') || currentPrompt === '' ? '' : ' ') + mentionsToAdd + ' ';
 
@@ -735,18 +739,19 @@ const FloatingPromptInputInner = (
       return;
     }
 
-    if (
-      e.key === "Enter" &&
-      !e.shiftKey &&
-      !isExpanded &&
-      !showFilePicker &&
-      !showSlashCommandPicker
-    ) {
+    if (e.key === 'Enter') {
       if (isIMEInteraction(e)) {
         return;
       }
-      e.preventDefault();
-      handleSend();
+
+      if ((e.ctrlKey || e.metaKey)) {
+        // Ctrl/Cmd + Enter: 发送消息
+        e.preventDefault();
+        handleSend();
+      } else if (!e.shiftKey && !isExpanded && !showFilePicker && !showSlashCommandPicker) {
+        // 单 Enter: 换行（不 preventDefault，让 textarea 默认行为）
+      }
+      // Shift + Enter 始终换行（默认行为）
     }
   };
 
@@ -771,7 +776,8 @@ const FloatingPromptInputInner = (
             // Add the base64 data URL directly to the prompt
             setPrompt(currentPrompt => {
               // Use the data URL directly as the image reference
-              const mention = `@"${base64Data}"`;
+              const placeholder = generatePlaceholder(base64Data, true);
+          const mention = placeholder;
               const newPrompt = currentPrompt + (currentPrompt.endsWith(' ') || currentPrompt === '' ? '' : ' ') + mention + ' ';
               
               // Focus the textarea and move cursor to end
@@ -1229,8 +1235,8 @@ const FloatingPromptInputInner = (
                   onPaste={handlePaste}
                   placeholder={
                     dragActive
-                      ? "Drop images here..."
-                      : "Message Claude (@ for files, / for commands)..."
+                      ? t('drop.images')
+                      : t('prompt.placeholder')
                   }
                   disabled={disabled}
                   className={cn(

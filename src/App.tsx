@@ -26,6 +26,8 @@ import { TabContent } from "@/components/TabContent";
 import { useTabState } from "@/hooks/useTabState";
 import { useAppLifecycle, useTrackEvent } from "@/hooks";
 import { StartupIntro } from "@/components/StartupIntro";
+import { I18nextProvider } from 'react-i18next';
+import i18n from '@/i18n';
 
 type View = 
   | "welcome" 
@@ -530,8 +532,10 @@ function App() {
     <ThemeProvider>
       <OutputCacheProvider>
         <TabProvider>
-          <AppContent />
-          <StartupIntro visible={showIntro} />
+          <I18nextProvider i18n={i18n}>
+            <AppContent />
+            <StartupIntro visible={showIntro} />
+          </I18nextProvider>
         </TabProvider>
       </OutputCacheProvider>
     </ThemeProvider>

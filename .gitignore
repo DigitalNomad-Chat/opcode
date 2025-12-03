@@ -37,3 +37,6 @@ CLAUDE.md
 .claude/
 
 .env
+
+# YoYo AI version control directory
+.yoyo/

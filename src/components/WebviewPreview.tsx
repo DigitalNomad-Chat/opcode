@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { useThrottle, useThrottledCallback } from '@/hooks/useDebounce';
 
 interface WebviewPreviewProps {
   /**
@@ -172,11 +173,11 @@ const WebviewPreviewComponent: React.FC<WebviewPreviewProps> = ({
     console.log("Go forward");
   };
 
-  const handleRefresh = () => {
+  const handleRefresh = useThrottledCallback(() => {
     setIsLoading(true);
     // In real implementation, this would call webview.reload()
     setTimeout(() => setIsLoading(false), 1000);
-  };
+  }, 500);
 
   const handleGoHome = () => {
     navigate(initialUrl);
