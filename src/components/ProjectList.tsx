@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from 'react-i18next';
 import { 
   FolderOpen,
   ChevronLeft,
@@ -89,6 +90,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({
   onOpenProject,
   className,
 }) => {
+  const { t } = useTranslation();
   const [showAll, setShowAll] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   
@@ -118,9 +120,9 @@ export const ProjectList: React.FC<ProjectListProps> = ({
         <div className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold">Projects</h1>
+              <h1 className="text-3xl font-bold">{t('projects')}</h1>
               <p className="mt-1 text-body-small text-muted-foreground">
-                Select a project to start working with Claude Code
+                {t('select.project')}
               </p>
             </div>
             <motion.div
@@ -133,7 +135,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                 className="flex items-center gap-2"
               >
                 <FolderOpen className="h-4 w-4" />
-                Open Project
+                {t('open.project')}
               </Button>
             </motion.div>
           </div>
@@ -145,7 +147,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({
           {displayedProjects.length > 0 ? (
             <Card className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-heading-4">Recent Projects</h2>
+                <h2 className="text-heading-4">{t('recent.projects')}</h2>
             {!showAll ? (
               <button 
                 onClick={handleViewAll}

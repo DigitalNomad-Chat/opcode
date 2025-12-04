@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useDebouncedCallback } from '@/hooks/useDebounce';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Maximize2, Minimize2, Copy, RefreshCw, RotateCcw, ChevronDown } from 'lucide-react';

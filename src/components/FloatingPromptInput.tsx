@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Send,
@@ -24,7 +23,7 @@ import { FilePicker } from "./FilePicker";
 import { SlashCommandPicker } from "./SlashCommandPicker";
 import { ImagePreview } from "./ImagePreview";
 import { type FileEntry, type SlashCommand } from "@/lib/api";
-import { generatePlaceholder } from '../hooks/useImageManager';
+import { generatePlaceholder, extractImagePaths as extractImagePathsUtil } from '../hooks/useImageManager';
 
 // Conditional import for Tauri webview window
 let tauriGetCurrentWebviewWindow: any;
@@ -214,7 +213,6 @@ const MODELS: Model[] = [
  * />
  */
 const FloatingPromptInputInner = (
-  { useTranslation } = useTranslation(),
   {
     onSend,
     isLoading = false,
@@ -291,60 +289,7 @@ const FloatingPromptInputInner = (
 
   // Extract image paths from prompt text
   const extractImagePaths = (text: string): string[] => {
-  return useImageManager().extractImagePaths(text); // 使用新钩子，兼容旧
-    console.log('[extractImagePaths] Input text length:', text.length);
-    
-    // Updated regex to handle both quoted and unquoted paths
-    // Pattern 1: @"path with spaces or data URLs" - quoted paths
-    // Pattern 2: @path - unquoted paths (continues until @ or end)
-    const quotedRegex = /@"([^"]+)"/g;
-    const unquotedRegex = /@([^@\n\s]+)/g;
-    
-    const pathsSet = new Set<string>(); // Use Set to ensure uniqueness
-    
-    // First, extract quoted paths (including data URLs)
-    let matches = Array.from(text.matchAll(quotedRegex));
-    console.log('[extractImagePaths] Quoted matches:', matches.length);
-    
-    for (const match of matches) {
-      const path = match[1]; // No need to trim, quotes preserve exact path
-      console.log('[extractImagePaths] Processing quoted path:', path.startsWith('data:') ? 'data URL' : path);
-      
-      // For data URLs, use as-is; for file paths, convert to absolute
-      const fullPath = path.startsWith('data:') 
-        ? path 
-        : (path.startsWith('/') ? path : (projectPath ? `${projectPath}/${path}` : path));
-      
-      if (isImageFile(fullPath)) {
-        pathsSet.add(fullPath);
-      }
-    }
-    
-    // Remove quoted mentions from text to avoid double-matching
-    let textWithoutQuoted = text.replace(quotedRegex, '');
-    
-    // Then extract unquoted paths (typically file paths)
-    matches = Array.from(textWithoutQuoted.matchAll(unquotedRegex));
-    console.log('[extractImagePaths] Unquoted matches:', matches.length);
-    
-    for (const match of matches) {
-      const path = match[1].trim();
-      // Skip if it looks like a data URL fragment (shouldn't happen with proper quoting)
-      if (path.includes('data:')) continue;
-      
-      console.log('[extractImagePaths] Processing unquoted path:', path);
-      
-      // Convert relative path to absolute if needed
-      const fullPath = path.startsWith('/') ? path : (projectPath ? `${projectPath}/${path}` : path);
-      
-      if (isImageFile(fullPath)) {
-        pathsSet.add(fullPath);
-      }
-    }
-
-    const uniquePaths = Array.from(pathsSet);
-    console.log('[extractImagePaths] Final extracted paths (unique):', uniquePaths.length);
-    return uniquePaths;
+    return extractImagePathsUtil(text); // 使用工具函数
   };
 
   // Update embedded images when prompt changes
@@ -1235,8 +1180,8 @@ const FloatingPromptInputInner = (
                   onPaste={handlePaste}
                   placeholder={
                     dragActive
-                      ? t('drop.images')
-                      : t('prompt.placeholder')
+                      ? "Drop images here"
+                      : "Type your prompt here..."
                   }
                   disabled={disabled}
                   className={cn(

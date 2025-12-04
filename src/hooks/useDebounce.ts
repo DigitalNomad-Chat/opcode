@@ -46,3 +46,65 @@ export function useDebouncedCallback<T extends (...args: any[]) => any>(
     }) as T
   ).current;
 }
+
+/**
+ * Custom hook that throttles a value by setting an immediate value and ignoring changes for delay
+ */
+export function useThrottle<T>(value: T, delay: number): T {
+  const [throttledValue, setThrottledValue] = useState<T>(value);
+  const lastExecuted = useRef<number>(Date.now());
+
+  useEffect(() => {
+    const now = Date.now();
+    const timeSinceLastExecution = now - lastExecuted.current;
+
+    if (timeSinceLastExecution >= delay) {
+      setThrottledValue(value);
+      lastExecuted.current = now;
+    } else {
+      const timeoutId = setTimeout(() => {
+        setThrottledValue(value);
+        lastExecuted.current = Date.now();
+      }, delay - timeSinceLastExecution);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [value, delay]);
+
+  return throttledValue;
+}
+
+/**
+ * Custom hook that returns a throttled callback
+ * The callback will only be invoked once per delay period, ignoring subsequent calls
+ */
+export function useThrottledCallback<T extends (...args: any[]) => any>(
+  callback: T,
+  delay: number
+): T {
+  const lastExecuted = useRef<number>(Date.now());
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const callbackRef = useRef(callback);
+
+  // Update callback ref on each render to avoid stale closures
+  callbackRef.current = callback;
+
+  return useRef(
+    ((...args: Parameters<T>) => {
+      const now = Date.now();
+      const timeSinceLastExecution = now - lastExecuted.current;
+
+      if (timeSinceLastExecution >= delay) {
+        lastExecuted.current = now;
+        callbackRef.current(...args);
+      } else if (!timeoutRef.current) {
+        // Set timeout to execute after the remaining delay
+        timeoutRef.current = setTimeout(() => {
+          lastExecuted.current = Date.now();
+          callbackRef.current(...args);
+          timeoutRef.current = null;
+        }, delay - timeSinceLastExecution);
+      }
+    }) as T
+  ).current;
+}

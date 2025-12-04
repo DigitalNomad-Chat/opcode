@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { useThrottle, useThrottledCallback } from '@/hooks/useDebounce';
+import { useThrottledCallback } from '@/hooks/useDebounce';
 
 interface WebviewPreviewProps {
   /**

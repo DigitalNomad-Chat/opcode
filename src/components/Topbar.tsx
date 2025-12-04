@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Popover } from "@/components/ui/popover";
 import { api, type ClaudeVersionStatus } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { useTranslation } from 'react-i18next';
 
 interface TopbarProps {
   /**
@@ -52,6 +53,7 @@ export const Topbar: React.FC<TopbarProps> = ({
   onSettingsClick,
   className,
 }) => {
+  const { t } = useTranslation();
   const [versionStatus, setVersionStatus] = useState<ClaudeVersionStatus | null>(null);
   const [checking, setChecking] = useState(true);
   
@@ -87,7 +89,7 @@ export const Topbar: React.FC<TopbarProps> = ({
       return (
         <div className="flex items-center space-x-2 text-xs">
           <Circle className="h-3 w-3 animate-pulse text-muted-foreground" />
-          <span className="text-muted-foreground">Checking...</span>
+          <span className="text-muted-foreground">{t('status.checking')}</span>
         </div>
       );
     }
@@ -137,7 +139,7 @@ export const Topbar: React.FC<TopbarProps> = ({
                 className="w-full"
                 onClick={onSettingsClick}
               >
-                Select Claude Installation
+                {t('select.claude.installation')}
               </Button>
               <a
                 href="https://www.anthropic.com/claude-code"
@@ -145,7 +147,7 @@ export const Topbar: React.FC<TopbarProps> = ({
                 rel="noopener noreferrer"
                 className="flex items-center space-x-1 text-xs text-primary hover:underline"
               >
-                <span>Install Claude Code</span>
+                <span>{t('install.claude.code')}</span>
                 <ExternalLink className="h-3 w-3" />
               </a>
             </div>

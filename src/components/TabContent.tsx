@@ -8,6 +8,7 @@ import { api, type Project, type Session, type ClaudeMdFile } from '@/lib/api';
 import { ProjectList } from '@/components/ProjectList';
 import { SessionList } from '@/components/SessionList';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from 'react-i18next';
 
 // Lazy load heavy components
 const ClaudeCodeSession = lazy(() => import('@/components/ClaudeCodeSession').then(m => ({ default: m.ClaudeCodeSession })));
@@ -29,12 +30,13 @@ interface TabPanelProps {
 }
 
 const TabPanel: React.FC<TabPanelProps> = ({ tab, isActive }) => {
+  const { t } = useTranslation();
   const { updateTab } = useTabState();
   const [projects, setProjects] = React.useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = React.useState<Project | null>(null);
   const [sessions, setSessions] = React.useState<Session[]>([]);
   const [loading, setLoading] = React.useState(false);
-  
+
   // Track screen when tab becomes active
   useScreenTracking(isActive ? tab.type : undefined, isActive ? tab.id : undefined);
   const [error, setError] = React.useState<string | null>(null);
@@ -110,7 +112,7 @@ const TabPanel: React.FC<TabPanelProps> = ({ tab, isActive }) => {
   const handleNewSession = () => {
     // Update current tab to show new chat session instead of creating a new tab
     if (selectedProject) {
-      const projectName = selectedProject.path.split('/').pop() || 'Session';
+      const projectName = selectedProject.path.split('/').pop() || t('chat.new');
       updateTab(tab.id, {
         type: 'chat',
         title: projectName,
@@ -121,7 +123,7 @@ const TabPanel: React.FC<TabPanelProps> = ({ tab, isActive }) => {
     } else {
       updateTab(tab.id, {
         type: 'chat',
-        title: 'New Session',
+        title: t('tabs.new'),
         sessionId: undefined,
         sessionData: undefined,
         initialProjectPath: undefined
@@ -156,11 +158,11 @@ const TabPanel: React.FC<TabPanelProps> = ({ tab, isActive }) => {
                                 setSessions([]);
                                 // Restore tab title to "Projects"
                                 updateTab(tab.id, {
-                                  title: 'Projects'
+                                  title: t('tabs.projects')
                                 });
                               }}
                               className="h-8 w-8 -ml-2"
-                              title="Back to Projects"
+                              title={t('back.to.projects')}
                             >
                               <ArrowLeft className="h-4 w-4" />
                             </Button>
@@ -183,7 +185,7 @@ const TabPanel: React.FC<TabPanelProps> = ({ tab, isActive }) => {
                             size="default"
                           >
                             <Plus className="mr-2 h-4 w-4" />
-                            New session
+                            {t('new.session')}
                           </Button>
                         </motion.div>
                       </div>
@@ -217,7 +219,7 @@ const TabPanel: React.FC<TabPanelProps> = ({ tab, isActive }) => {
                           // Update current tab to show the selected session
                           updateTab(tab.id, {
                             type: 'chat',
-                            title: session.project_path.split('/').pop() || 'Session',
+                            title: session.project_path.split('/').pop() || t('chat.new'),
                             sessionId: session.id,
                             sessionData: session,
                             initialProjectPath: session.project_path
@@ -255,12 +257,12 @@ const TabPanel: React.FC<TabPanelProps> = ({ tab, isActive }) => {
                 // Go back to projects view in the same tab
                 updateTab(tab.id, {
                   type: 'projects',
-                  title: 'Projects',
+                  title: t('tabs.projects'),
                 });
               }}
               onProjectPathChange={(path: string) => {
                 // Update tab title with directory name
-                const dirName = path.split('/').pop() || path.split('\\').pop() || 'Session';
+                const dirName = path.split('/').pop() || path.split('\\').pop() || t('chat.new');
                 updateTab(tab.id, {
                   title: dirName
                 });
@@ -273,7 +275,7 @@ const TabPanel: React.FC<TabPanelProps> = ({ tab, isActive }) => {
         if (!tab.agentRunId) {
           return (
             <div className="h-full">
-              <div className="p-4">No agent run ID specified</div>
+              <div className="p-4">{t('error.no.agent.id')}</div>
             </div>
           );
         }
@@ -323,15 +325,15 @@ const TabPanel: React.FC<TabPanelProps> = ({ tab, isActive }) => {
       
       case 'claude-file':
         if (!tab.claudeFileId) {
-          return <div className="p-4">No Claude file ID specified</div>;
+          return <div className="p-4">{t('error.no.claude.file.id')}</div>;
         }
         // Note: We need to get the actual file object for ClaudeFileEditor
         // For now, returning a placeholder
-        return <div className="p-4">Claude file editor not yet implemented in tabs</div>;
+        return <div className="p-4">{t('status.coming.soon')}</div>;
       
       case 'agent-execution':
         if (!tab.agentData) {
-          return <div className="p-4">No agent data specified</div>;
+          return <div className="p-4">{t('error.no.agent.data')}</div>;
         }
         return (
           <AgentExecution
@@ -360,14 +362,14 @@ const TabPanel: React.FC<TabPanelProps> = ({ tab, isActive }) => {
         // TODO: Implement import agent component
         return (
           <div className="h-full">
-            <div className="p-4">Import agent functionality coming soon...</div>
+            <div className="p-4">{t('agents.import')} {t('status.coming.soon')}</div>
           </div>
         );
       
       default:
         return (
           <div className="h-full">
-            <div className="p-4">Unknown tab type: {tab.type}</div>
+            <div className="p-4">{t('error.unknown.tab', { type: tab.type })}</div>
           </div>
         );
     }
@@ -398,6 +400,7 @@ const TabPanel: React.FC<TabPanelProps> = ({ tab, isActive }) => {
 };
 
 export const TabContent: React.FC = () => {
+  const { t } = useTranslation();
   const { tabs, activeTabId, createChatTab, createProjectsTab, findTabBySessionId, createClaudeFileTab, createAgentExecutionTab, createCreateAgentTab, createImportAgentTab, closeTab, updateTab } = useTabState();
   
   // Listen for events to open sessions in tabs
@@ -411,12 +414,12 @@ export const TabContent: React.FC = () => {
         // Update existing tab with session data and switch to it
         updateTab(existingTab.id, {
           sessionData: session,
-          title: session.project_path.split('/').pop() || 'Session'
+          title: session.project_path.split('/').pop() || t('chat.new')
         });
         window.dispatchEvent(new CustomEvent('switch-to-tab', { detail: { tabId: existingTab.id } }));
       } else {
         // Create new tab for this session
-        const projectName = session.project_path.split('/').pop() || 'Session';
+        const projectName = session.project_path.split('/').pop() || t('chat.new');
         const newTabId = createChatTab(session.id, projectName, session.project_path);
         // Update the new tab with session data
         updateTab(newTabId, {
@@ -457,7 +460,7 @@ export const TabContent: React.FC = () => {
         // If tab exists, just switch to it
         updateTab(existingTab.id, {
           sessionData: session,
-          title: session.project_path.split('/').pop() || 'Session',
+          title: session.project_path.split('/').pop() || t('chat.new'),
         });
         window.dispatchEvent(new CustomEvent('switch-to-tab', { detail: { tabId: existingTab.id } }));
       } else {
@@ -467,13 +470,13 @@ export const TabContent: React.FC = () => {
         if (currentTab && currentTab.type === 'projects') {
           updateTab(currentTab.id, {
             type: 'chat',
-            title: session.project_path.split('/').pop() || 'Session',
+            title: session.project_path.split('/').pop() || t('chat.new'),
             sessionId: session.id,
             sessionData: session,
             initialProjectPath: session.project_path
           });
         } else {
-          const projectName = session.project_path.split('/').pop() || 'Session';
+          const projectName = session.project_path.split('/').pop() || t('chat.new');
           const newTabId = createChatTab(session.id, projectName, session.project_path);
           updateTab(newTabId, {
             sessionData: session,
@@ -516,14 +519,14 @@ export const TabContent: React.FC = () => {
       {tabs.length === 0 && (
         <div className="flex items-center justify-center h-full text-muted-foreground">
           <div className="text-center">
-            <p className="text-lg mb-2">No projects open</p>
-            <p className="text-sm mb-4">Click to start a new project</p>
+            <p className="text-lg mb-2">{t('no.recent.projects')}</p>
+            <p className="text-sm mb-4">{t('select.project')}</p>
             <Button
               onClick={() => createProjectsTab()}
               size="default"
             >
               <Plus className="w-4 h-4 mr-2" />
-              New Project
+              {t('new.project')}
             </Button>
           </div>
         </div>

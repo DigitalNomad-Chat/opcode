@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Plus, 
-  Trash2, 
-  Save, 
+import {
+  Plus,
+  Trash2,
+  Save,
   AlertCircle,
   Loader2,
   Shield,
@@ -23,12 +23,14 @@ import {
 import { cn } from "@/lib/utils";
 import { Toast, ToastContainer } from "@/components/ui/toast";
 import { ClaudeVersionSelector } from "./ClaudeVersionSelector";
+import { useTranslation } from 'react-i18next';
 import { StorageTab } from "./StorageTab";
 import { HooksEditor } from "./HooksEditor";
 import { SlashCommandsManager } from "./SlashCommandsManager";
 import { ProxySettings } from "./ProxySettings";
 import { useTheme, useTrackEvent } from "@/hooks";
 import { analytics } from "@/lib/analytics";
+import { useLanguage } from "@/hooks/useLanguage";
 import { TabPersistenceService } from "@/services/tabPersistence";
 
 interface SettingsProps {
@@ -83,6 +85,12 @@ export const Settings: React.FC<SettingsProps> = ({
   
   // Theme hook
   const { theme, setTheme, customColors, setCustomColors } = useTheme();
+
+  // Language hook
+  const { currentLanguage, changeLanguage, isChanging } = useLanguage();
+
+  // Translation hook
+  const { t } = useTranslation();
   
   // Proxy state
   const [proxySettingsChanged, setProxySettingsChanged] = useState(false);
@@ -408,13 +416,51 @@ export const Settings: React.FC<SettingsProps> = ({
             <TabsContent value="general" className="space-y-6 mt-6">
               <Card className="p-6 space-y-6">
                 <div>
-                  <h3 className="text-heading-4 mb-4">General Settings</h3>
+                  <h3 className="text-heading-4 mb-4">{t('general.settings')}</h3>
                   
                   <div className="space-y-4">
+                    {/* Language Selector */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label>{t('language')}</Label>
+                        <p className="text-caption text-muted-foreground mt-1">
+                          {t('select.language')}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1 p-1 bg-muted/30 rounded-lg">
+                        <button
+                          onClick={() => changeLanguage('zh')}
+                          className={cn(
+                            "flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all",
+                            currentLanguage === 'zh'
+                              ? "bg-background shadow-sm"
+                              : "hover:bg-background/50"
+                          )}
+                          disabled={isChanging}
+                        >
+                          {currentLanguage === 'zh' && <Check className="h-3 w-3" />}
+                          {t('chinese')}
+                        </button>
+                        <button
+                          onClick={() => changeLanguage('en')}
+                          className={cn(
+                            "flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all",
+                            currentLanguage === 'en'
+                              ? "bg-background shadow-sm"
+                              : "hover:bg-background/50"
+                          )}
+                          disabled={isChanging}
+                        >
+                          {currentLanguage === 'en' && <Check className="h-3 w-3" />}
+                          {t('english')}
+                        </button>
+                      </div>
+                    </div>
+
                     {/* Theme Selector */}
                     <div className="flex items-center justify-between">
                       <div>
-                        <Label>Theme</Label>
+                        <Label>{t('theme')}</Label>
                         <p className="text-caption text-muted-foreground mt-1">
                           Choose your preferred color theme
                         </p>
@@ -430,31 +476,31 @@ export const Settings: React.FC<SettingsProps> = ({
                           )}
                         >
                           {theme === 'dark' && <Check className="h-3 w-3" />}
-                          Dark
+                          {t('dark')}
                         </button>
                         <button
                           onClick={() => setTheme('gray')}
                           className={cn(
                             "flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all",
-                            theme === 'gray' 
-                              ? "bg-background shadow-sm" 
+                            theme === 'gray'
+                              ? "bg-background shadow-sm"
                               : "hover:bg-background/50"
                           )}
                         >
                           {theme === 'gray' && <Check className="h-3 w-3" />}
-                          Gray
+                          {t('gray')}
                         </button>
                         <button
                           onClick={() => setTheme('light')}
                           className={cn(
                             "flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all",
-                            theme === 'light' 
-                              ? "bg-background shadow-sm" 
+                            theme === 'light'
+                              ? "bg-background shadow-sm"
                               : "hover:bg-background/50"
                           )}
                         >
                           {theme === 'light' && <Check className="h-3 w-3" />}
-                          Light
+                          {t('light')}
                         </button>
                         <button
                           onClick={() => setTheme('custom')}
